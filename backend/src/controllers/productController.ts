@@ -1,15 +1,42 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
+import mongoose from 'mongoose';
 import Product from '../models/productModel';
+import { products as mockProducts } from '../mockData';
 
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
 const getProducts = asyncHandler(async (req: Request, res: Response) => {
+    // Check if DB is connected
+    const isDBConnected = mongoose.connection.readyState === 1;
+
     const pageSize = Number(req.query.pageSize) || 10;
     const page = Number(req.query.pageNumber) || 1;
+    const keyword = (req.query.keyword as string)?.toLowerCase();
 
-    const keyword = req.query.keyword
+    if (!isDBConnected) {
+        let filteredProducts = [...mockProducts];
+
+        if (keyword) {
+            filteredProducts = filteredProducts.filter(p =>
+                p.name.toLowerCase().includes(keyword) ||
+                p.description.toLowerCase().includes(keyword)
+            );
+        }
+
+        if (req.query.category) {
+            filteredProducts = filteredProducts.filter(p => p.category === req.query.category);
+        }
+
+        const count = filteredProducts.length;
+        const products = filteredProducts.slice(pageSize * (page - 1), pageSize * page);
+
+        res.json({ products, page, pages: Math.ceil(count / pageSize), total: count });
+        return;
+    }
+
+    const keywordQuery = req.query.keyword
         ? {
             $text: { $search: req.query.keyword as string },
         }
@@ -34,8 +61,8 @@ const getProducts = asyncHandler(async (req: Request, res: Response) => {
     else if (req.query.sortBy === 'rating') sortOptions.rating = -1;
     else sortOptions.createdAt = -1;
 
-    const count = await Product.countDocuments({ ...keyword, ...category, ...priceQuery });
-    const products = await Product.find({ ...keyword, ...category, ...priceQuery })
+    const count = await Product.countDocuments({ ...keywordQuery, ...category, ...priceQuery });
+    const products = await Product.find({ ...keywordQuery, ...category, ...priceQuery })
         .sort(sortOptions)
         .limit(pageSize)
         .skip(pageSize * (page - 1));
@@ -47,6 +74,18 @@ const getProducts = asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/products/:id
 // @access  Public
 const getProductById = asyncHandler(async (req: Request, res: Response) => {
+    // Mock Fallback
+    if (mongoose.connection.readyState !== 1) {
+        const product = mockProducts.find(p => p.slug === req.params.id || p._id === req.params.id);
+        if (product) {
+            res.json(product);
+        } else {
+            res.status(404);
+            throw new Error('Product not found (Mock Mode)');
+        }
+        return;
+    }
+
     const product = await Product.findById(req.params.id);
 
     if (product) {
@@ -169,6 +208,12 @@ const createProductReview = asyncHandler(async (req: Request, res: Response) => 
 // @route   GET /api/products/top
 // @access  Public
 const getTopProducts = asyncHandler(async (req: Request, res: Response) => {
+    if (mongoose.connection.readyState !== 1) {
+        const topProducts = [...mockProducts].sort((a, b) => b.rating - a.rating).slice(0, 5);
+        res.json(topProducts);
+        return;
+    }
+
     const products = await Product.find({}).sort({ rating: -1 }).limit(5);
     res.json(products);
 });
@@ -177,6 +222,12 @@ const getTopProducts = asyncHandler(async (req: Request, res: Response) => {
 // @route   GET /api/products/categories
 // @access  Public
 const getCategories = asyncHandler(async (req: Request, res: Response) => {
+    if (mongoose.connection.readyState !== 1) {
+        const categories = Array.from(new Set(mockProducts.map(p => p.category)));
+        res.json(categories);
+        return;
+    }
+
     const categories = await Product.distinct('category');
     res.json(categories);
 });

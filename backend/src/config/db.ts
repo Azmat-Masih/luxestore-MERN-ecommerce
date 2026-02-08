@@ -6,29 +6,18 @@ dotenv.config();
 
 const connectDB = async () => {
     try {
-        let dbUrl = process.env.MONGO_URI;
+        const dbUrl = process.env.MONGO_URI;
 
-        if (!dbUrl || dbUrl.includes('localhost')) {
-            console.log('Attemping to connect to local MongoDB...');
-            try {
-                // Try connecting to local MongoDB first
-                const conn = await mongoose.connect(dbUrl || 'mongodb://127.0.0.1:27017/ecommerce', {
-                    serverSelectionTimeoutMS: 2000,
-                });
-                console.log(`MongoDB Connected: ${conn.connection.host}`);
-                return;
-            } catch (err) {
-                console.log('Local MongoDB not found. Starting MongoDB Memory Server for development...');
-                const mongoServer = await MongoMemoryServer.create();
-                dbUrl = mongoServer.getUri();
-            }
+        if (!dbUrl) {
+            console.log('⚠️ MONGO_URI not found. Running in MOCK MODE (data will not persist).');
+            return;
         }
 
         const conn = await mongoose.connect(dbUrl);
-        console.log(`MongoDB Connected (Memory/Cloud): ${conn.connection.host}`);
+        console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     } catch (error) {
-        console.error(`Error: ${(error as Error).message}`);
-        process.exit(1);
+        console.error(`❌ Database Connection Error: ${(error as Error).message}`);
+        // In serverless environments, we let the app continue so controllers can handle mock data
     }
 };
 
