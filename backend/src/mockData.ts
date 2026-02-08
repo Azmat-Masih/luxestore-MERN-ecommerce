@@ -1,5 +1,6 @@
 export const products = [
     {
+        _id: '1',
         name: 'Vanguard Chronograph',
         slug: 'vanguard-chronograph',
         image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=1000',
@@ -12,6 +13,7 @@ export const products = [
         numReviews: 12,
     },
     {
+        _id: '2',
         name: 'Nordic Minimalist Desk',
         slug: 'nordic-minimalist-desk',
         image: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?auto=format&fit=crop&q=80&w=1000',
@@ -24,6 +26,7 @@ export const products = [
         numReviews: 8,
     },
     {
+        _id: '3',
         name: 'Aura Wireless Headphones',
         slug: 'aura-wireless-headphones',
         image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=1000',
@@ -36,6 +39,7 @@ export const products = [
         numReviews: 24,
     },
     {
+        _id: '4',
         name: 'Elysian Leather Briefcase',
         slug: 'elysian-leather-briefcase',
         image: 'https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?auto=format&fit=crop&q=80&w=1000',
@@ -48,6 +52,7 @@ export const products = [
         numReviews: 15,
     },
     {
+        _id: '5',
         name: 'Zenith Smart Light',
         slug: 'zenith-smart-light',
         image: 'https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80&w=1000',
@@ -60,6 +65,7 @@ export const products = [
         numReviews: 30,
     },
     {
+        _id: '6',
         name: 'Oasis Ceramic Planter',
         slug: 'oasis-ceramic-planter',
         image: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&q=80&w=1000',
@@ -75,17 +81,20 @@ export const products = [
 
 export const users = [
     {
+        _id: '1',
         name: 'Admin User',
         email: 'admin@example.com',
         password: 'password123',
         isAdmin: true,
     },
     {
+        _id: '2',
         name: 'John Doe',
         email: 'john@example.com',
         password: 'password123',
     },
     {
+        _id: '3',
         name: 'Jane Smith',
         email: 'jane@example.com',
         password: 'password123',
