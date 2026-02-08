@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://luxestore-mern-ecommerce-hhw8.vercel.app';
+const API_URL = import.meta.env.VITE_API_URL || 'https://luxestore-backend.onrender.com';
 
 const api = axios.create({
     baseURL: API_URL,
