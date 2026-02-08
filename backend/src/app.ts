@@ -53,6 +53,11 @@ app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
+// Health Check Route (for Render monitoring)
+app.get('/api/health', (_, res) => {
+    res.json({ status: 'ok' });
+});
+
 // Error Handling
 app.use(notFound);
 app.use(errorHandler);
