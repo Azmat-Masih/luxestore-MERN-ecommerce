@@ -65,11 +65,12 @@ const getProducts = asyncHandler(async (req: Request, res: Response) => {
         else if (req.query.sortBy === 'rating') sortOptions.rating = -1;
         else sortOptions.createdAt = -1;
 
+        const globalCount = await Product.countDocuments({});
         const count = await Product.countDocuments({ ...keywordQuery, ...category, ...priceQuery });
 
-        // FAILSAFE: If DB is connected but empty (count === 0), fall back to mock data
+        // FAILSAFE: If DB is connected but empty, fall back to mock data
         // This ensures the site always has content to show!
-        if (count === 0 && !req.query.keyword && !req.query.category) {
+        if (globalCount === 0) {
             res.json(returnMockData());
             return;
         }
