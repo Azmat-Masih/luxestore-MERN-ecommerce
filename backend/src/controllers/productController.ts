@@ -222,28 +222,58 @@ const createProductReview = asyncHandler(async (req: Request, res: Response) => 
 // @route   GET /api/products/top
 // @access  Public
 const getTopProducts = asyncHandler(async (req: Request, res: Response) => {
-    if (mongoose.connection.readyState !== 1) {
+    const returnMockTopProducts = () => {
         const topProducts = [...mockProducts].sort((a, b) => b.rating - a.rating).slice(0, 5);
         res.json(topProducts);
+    };
+
+    if (mongoose.connection.readyState !== 1) {
+        returnMockTopProducts();
         return;
     }
 
-    const products = await Product.find({}).sort({ rating: -1 }).limit(5);
-    res.json(products);
+    try {
+        const products = await Product.find({}).sort({ rating: -1 }).limit(5);
+
+        if (products.length === 0) {
+            returnMockTopProducts();
+            return;
+        }
+
+        res.json(products);
+    } catch (error) {
+        console.error('Top products fetch failed, using mock data:', error);
+        returnMockTopProducts();
+    }
 });
 
 // @desc    Get products by category
 // @route   GET /api/products/categories
 // @access  Public
 const getCategories = asyncHandler(async (req: Request, res: Response) => {
-    if (mongoose.connection.readyState !== 1) {
+    const returnMockCategories = () => {
         const categories = Array.from(new Set(mockProducts.map(p => p.category)));
         res.json(categories);
+    };
+
+    if (mongoose.connection.readyState !== 1) {
+        returnMockCategories();
         return;
     }
 
-    const categories = await Product.distinct('category');
-    res.json(categories);
+    try {
+        const categories = await Product.distinct('category');
+
+        if (categories.length === 0) {
+            returnMockCategories();
+            return;
+        }
+
+        res.json(categories);
+    } catch (error) {
+        console.error('Categories fetch failed, using mock data:', error);
+        returnMockCategories();
+    }
 });
 
 export {
