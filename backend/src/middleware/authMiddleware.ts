@@ -15,12 +15,23 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
 
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123') as JwtPayload;
+            // Try DB first
+            let user = await User.findById(decoded.userId).select('-password');
 
-            // @ts-ignore - we will fix type definition later
-            req.user = await User.findById(decoded.userId).select('-password');
+            // Fallback to Mock Users
+            if (!user) {
+                const { users: mockUsers } = require('../mockData');
+                user = mockUsers.find((u: any) => u._id === decoded.userId.toString());
+            }
 
-            next();
+            if (user) {
+                // @ts-ignore
+                req.user = user;
+                next();
+            } else {
+                res.status(401);
+                throw new Error('Not authorized, user not found');
+            }
         } catch (error) {
             console.error(error);
             res.status(401);
