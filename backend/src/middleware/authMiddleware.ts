@@ -6,7 +6,9 @@ interface JwtPayload {
     userId: string;
 }
 
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
+import asyncHandler from 'express-async-handler';
+
+export const protect = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     let token;
 
     token = req.cookies.jwt;
@@ -28,7 +30,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
         res.status(401);
         throw new Error('Not authorized, no token');
     }
-};
+});
 
 export const admin = (req: Request, res: Response, next: NextFunction) => {
     // @ts-ignore
