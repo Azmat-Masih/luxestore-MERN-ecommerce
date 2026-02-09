@@ -7,15 +7,16 @@ import { products as mockProducts } from '../mockData';
 // @desc    Fetch all products
 // @route   GET /api/products
 // @access  Public
+// @desc    Fetch all products
+// @route   GET /api/products
+// @access  Public
 const getProducts = asyncHandler(async (req: Request, res: Response) => {
-    // Check if DB is connected
-    const isDBConnected = mongoose.connection.readyState === 1;
-
     const pageSize = Number(req.query.pageSize) || 10;
     const page = Number(req.query.pageNumber) || 1;
     const keyword = (req.query.keyword as string)?.toLowerCase();
 
-    if (!isDBConnected) {
+    // Helper to return mock data
+    const returnMockData = () => {
         let filteredProducts = [...mockProducts];
 
         if (keyword) {
@@ -32,42 +33,55 @@ const getProducts = asyncHandler(async (req: Request, res: Response) => {
         const count = filteredProducts.length;
         const products = filteredProducts.slice(pageSize * (page - 1), pageSize * page);
 
-        res.json({ products, page, pages: Math.ceil(count / pageSize), total: count });
+        return { products, page, pages: Math.ceil(count / pageSize), total: count };
+    };
+
+    // If DB not connected, return mock data
+    if (mongoose.connection.readyState !== 1) {
+        res.json(returnMockData());
         return;
     }
 
-    const keywordQuery = req.query.keyword
-        ? {
-            $text: { $search: req.query.keyword as string },
+    try {
+        const keywordQuery = req.query.keyword
+            ? { $text: { $search: req.query.keyword as string } }
+            : {};
+
+        const category = req.query.category
+            ? { category: req.query.category }
+            : {};
+
+        const priceFilter: Record<string, unknown> = {};
+        if (req.query.minPrice) priceFilter.$gte = Number(req.query.minPrice);
+        if (req.query.maxPrice) priceFilter.$lte = Number(req.query.maxPrice);
+        const priceQuery = Object.keys(priceFilter).length > 0 ? { price: priceFilter } : {};
+
+        const sortOptions: Record<string, 1 | -1> = {};
+        if (req.query.sortBy === 'price_asc') sortOptions.price = 1;
+        else if (req.query.sortBy === 'price_desc') sortOptions.price = -1;
+        else if (req.query.sortBy === 'rating') sortOptions.rating = -1;
+        else sortOptions.createdAt = -1;
+
+        const count = await Product.countDocuments({ ...keywordQuery, ...category, ...priceQuery });
+
+        // FAILSAFE: If DB is connected but empty (count === 0), fall back to mock data
+        // This ensures the site always has content to show!
+        if (count === 0 && !req.query.keyword && !req.query.category) {
+            res.json(returnMockData());
+            return;
         }
-        : {};
 
-    const category = req.query.category
-        ? { category: req.query.category }
-        : {};
+        const products = await Product.find({ ...keywordQuery, ...category, ...priceQuery })
+            .sort(sortOptions)
+            .limit(pageSize)
+            .skip(pageSize * (page - 1));
 
-    const priceFilter: Record<string, unknown> = {};
-    if (req.query.minPrice) {
-        priceFilter.$gte = Number(req.query.minPrice);
+        res.json({ products, page, pages: Math.ceil(count / pageSize), total: count });
+    } catch (error) {
+        // If query fails (e.g. text search index missing), fall back to mock data
+        console.error('Product fetch failed, falling back to mock data:', error);
+        res.json(returnMockData());
     }
-    if (req.query.maxPrice) {
-        priceFilter.$lte = Number(req.query.maxPrice);
-    }
-    const priceQuery = Object.keys(priceFilter).length > 0 ? { price: priceFilter } : {};
-
-    const sortOptions: Record<string, 1 | -1> = {};
-    if (req.query.sortBy === 'price_asc') sortOptions.price = 1;
-    else if (req.query.sortBy === 'price_desc') sortOptions.price = -1;
-    else if (req.query.sortBy === 'rating') sortOptions.rating = -1;
-    else sortOptions.createdAt = -1;
-
-    const count = await Product.countDocuments({ ...keywordQuery, ...category, ...priceQuery });
-    const products = await Product.find({ ...keywordQuery, ...category, ...priceQuery })
-        .sort(sortOptions)
-        .limit(pageSize)
-        .skip(pageSize * (page - 1));
-
-    res.json({ products, page, pages: Math.ceil(count / pageSize), total: count });
 });
 
 // @desc    Fetch single product
