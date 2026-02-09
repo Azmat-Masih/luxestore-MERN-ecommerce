@@ -25,9 +25,23 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
                 user = await User.findById(decoded.userId).select('-password');
             }
 
-            // Fallback to Mock Users
+            // Fallback to Mock Users & Auto-Promotion
             if (!user) {
-                user = mockUsers.find((u: any) => u._id === decoded.userId.toString());
+                const mockUser = mockUsers.find((u: any) => u._id === decoded.userId.toString());
+                if (mockUser) {
+                    // Check if this mock user already has a DB entry
+                    user = await User.findOne({ email: mockUser.email }).select('-password');
+
+                    if (!user) {
+                        // Create the DB entry if it doesn't exist
+                        user = await User.create({
+                            name: mockUser.name,
+                            email: mockUser.email,
+                            password: mockUser.password, // Model hashes this
+                            isAdmin: mockUser.isAdmin,
+                        });
+                    }
+                }
             }
 
             if (user) {
