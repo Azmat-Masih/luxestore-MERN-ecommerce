@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://luxestore-backend-ad12.onrender.com' : 'http://localhost:5000');
 console.log('🔌 API URL Configured:', API_URL);
 
 const api = axios.create({
