@@ -61,12 +61,24 @@ export const authUser = asyncHandler(async (req: Request, res: Response) => {
     const mockUser = mockUsers.find((u: any) => u.email === email && u.password === password);
 
     if (mockUser) {
-        generateToken(res, mockUser._id);
+        // AUTO-PROMOTION: Check if this mock user exists in DB, if not, create them
+        let dbUser = await User.findOne({ email: mockUser.email });
+
+        if (!dbUser) {
+            dbUser = await User.create({
+                name: mockUser.name,
+                email: mockUser.email,
+                password: mockUser.password, // This will be hashed by the model's pre-save hook
+                isAdmin: mockUser.isAdmin,
+            });
+        }
+
+        generateToken(res, dbUser._id);
         res.json({
-            _id: mockUser._id,
-            name: mockUser.name,
-            email: mockUser.email,
-            isAdmin: mockUser.isAdmin,
+            _id: dbUser._id,
+            name: dbUser.name,
+            email: dbUser.email,
+            isAdmin: dbUser.isAdmin,
         });
         return;
     }
