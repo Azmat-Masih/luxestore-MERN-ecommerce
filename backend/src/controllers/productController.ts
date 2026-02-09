@@ -100,14 +100,21 @@ const getProductById = asyncHandler(async (req: Request, res: Response) => {
         return;
     }
 
-    const product = await Product.findById(req.params.id);
-
-    if (product) {
-        res.json(product);
-    } else {
-        res.status(404);
-        throw new Error('Product not found');
+    // Safety check for MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        const product = await Product.findById(req.params.id);
+        if (product) {
+            res.json(product);
+            return;
+        }
     }
+
+    // Fallback: Check if it's a numeric ID (from legacy mock data) or Slug
+    // If the frontend requests "3", we shouldn't crash.
+    // We can also try to find by slug if your schema supports it, or just 404 cleanly.
+
+    res.status(404);
+    throw new Error('Product not found');
 });
 
 // @desc    Create a product
