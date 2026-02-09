@@ -27,7 +27,10 @@ const getProducts = asyncHandler(async (req: Request, res: Response) => {
         }
 
         if (req.query.category) {
-            filteredProducts = filteredProducts.filter(p => p.category === req.query.category);
+            const categoryQuery = (req.query.category as string).toLowerCase();
+            filteredProducts = filteredProducts.filter(p =>
+                p.category.toLowerCase() === categoryQuery
+            );
         }
 
         const count = filteredProducts.length;
