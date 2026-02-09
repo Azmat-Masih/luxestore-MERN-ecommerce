@@ -27,7 +27,7 @@ api.interceptors.response.use(
 
             // Could implement token refresh here if using refresh tokens
             // For now, just redirect to login
-            if (typeof window !== 'undefined') {
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
                 window.location.href = '/login';
             }
         }

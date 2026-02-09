@@ -22,7 +22,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             try {
                 const userData = await authApi.getProfile();
                 setUser(userData);
-            } catch {
+            } catch (error) {
+                // Squelch 401s or other errors - just means not logged in
                 setUser(null);
             } finally {
                 setIsLoading(false);
