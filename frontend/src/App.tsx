@@ -44,9 +44,18 @@ const Layout: React.FC = () => (
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
     const { user, isLoading } = useAuth();
+    const location = useLocation();
+
     if (isLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-    if (!user) return <Navigate to="/login" replace />;
-    if (adminOnly && !user.isAdmin) return <Navigate to="/" replace />;
+
+    if (!user) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    if (adminOnly && !user.isAdmin) {
+        return <Navigate to="/" replace />;
+    }
+
     return <>{children}</>;
 };
 

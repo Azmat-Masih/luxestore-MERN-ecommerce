@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
+import mongoose from 'mongoose';
 import User from '../models/userModel';
 import generateToken from '../utils/generateToken';
+import { users as mockUsers } from '../mockData';
 
 // @desc    Register a new user
 // @route   POST /api/users
@@ -52,10 +54,25 @@ export const authUser = asyncHandler(async (req: Request, res: Response) => {
             email: user.email,
             isAdmin: user.isAdmin,
         });
-    } else {
-        res.status(401);
-        throw new Error('Invalid email or password');
+        return;
     }
+
+    // Mock User Fallback (for empty DB)
+    const mockUser = mockUsers.find((u: any) => u.email === email && u.password === password);
+
+    if (mockUser) {
+        generateToken(res, mockUser._id);
+        res.json({
+            _id: mockUser._id,
+            name: mockUser.name,
+            email: mockUser.email,
+            isAdmin: mockUser.isAdmin,
+        });
+        return;
+    }
+
+    res.status(401);
+    throw new Error('Invalid email or password');
 });
 
 // @desc    Logout user / clear cookie
@@ -74,19 +91,36 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 // @access  Private
 export const getUserProfile = asyncHandler(async (req: Request, res: Response) => {
     // @ts-ignore
-    const user = await User.findById(req.user._id);
+    const userId = req.user._id;
 
-    if (user) {
-        res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            isAdmin: user.isAdmin,
-        });
-    } else {
-        res.status(404);
-        throw new Error('User not found');
+    // Try DB first
+    if (mongoose.Types.ObjectId.isValid(userId)) {
+        const user = await User.findById(userId);
+        if (user) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                isAdmin: user.isAdmin,
+            });
+            return;
+        }
     }
+
+    // Try Mock users
+    const mockUser = mockUsers.find((u: any) => u._id === userId.toString());
+    if (mockUser) {
+        res.json({
+            _id: mockUser._id,
+            name: mockUser.name,
+            email: mockUser.email,
+            isAdmin: mockUser.isAdmin,
+        });
+        return;
+    }
+
+    res.status(404);
+    throw new Error('User not found');
 });
 
 // @desc    Update user profile
