@@ -38,7 +38,7 @@ A production-grade, scalable e-commerce platform built with the MERN stack (Mong
 - bcrypt for password hashing
 
 ## Getting Started
-<!-- Deployment Trigger: 2026-02-09 -->
+<!-- Deployment Trigger: 2026-02-09 Attempt 2 -->
 
 ### Prerequisites
 - Node.js 18+ (LTS)
