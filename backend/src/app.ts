@@ -17,8 +17,9 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-    origin: (origin, callback) => {
+
+const corsOptions = {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
         const allowedOrigins = [
             process.env.FRONTEND_URL,
             'http://localhost:5173',
@@ -35,10 +36,17 @@ app.use(cors({
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-}));
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Handle preflight requests
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(cookieParser());
+
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'));
 }
