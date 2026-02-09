@@ -110,8 +110,12 @@ const getProductById = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Fallback: Check if it's a numeric ID (from legacy mock data) or Slug
-    // If the frontend requests "3", we shouldn't crash.
-    // We can also try to find by slug if your schema supports it, or just 404 cleanly.
+    // If not found in DB, check Mock Data
+    const mockProduct = mockProducts.find(p => p.slug === req.params.id || p._id === req.params.id);
+    if (mockProduct) {
+        res.json(mockProduct);
+        return;
+    }
 
     res.status(404);
     throw new Error('Product not found');
