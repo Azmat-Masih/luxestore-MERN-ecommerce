@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://luxestore-backend-ad12.onrender.com' : 'http://localhost:5000');
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 console.log('🔌 API URL Configured:', API_URL);
+
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+    console.error('🚨 CRITICAL ERROR: VITE_API_URL is missing! The app is trying to connect to localhost which will fail. Please set VITE_API_URL in Vercel to your Render Backend URL.');
+}
 
 const api = axios.create({
     baseURL: API_URL,
