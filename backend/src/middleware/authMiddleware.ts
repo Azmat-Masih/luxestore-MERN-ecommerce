@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel';
+import { users as mockUsers } from '../mockData';
 
 interface JwtPayload {
     userId: string;
@@ -15,12 +16,16 @@ export const protect = asyncHandler(async (req: Request, res: Response, next: Ne
 
     if (token) {
         try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123') as JwtPayload;
+
             // Try DB first
-            let user = await User.findById(decoded.userId).select('-password');
+            let user = null;
+            if (mongoose.Types.ObjectId.isValid(decoded.userId)) {
+                user = await User.findById(decoded.userId).select('-password');
+            }
 
             // Fallback to Mock Users
             if (!user) {
-                const { users: mockUsers } = require('../mockData');
                 user = mockUsers.find((u: any) => u._id === decoded.userId.toString());
             }
 
